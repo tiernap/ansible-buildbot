@@ -1,0 +1,23 @@
+---
+- hosts: buildbot-master
+  sudo: True
+  tags:
+    - buildbot
+    - buildbot-master
+
+  roles:
+    - { role: ../roles/buildbot-master }
+
+- hosts: buildbot-slave
+  sudo: True
+  tags:
+    - buildbot
+    - buildbot-slave
+
+  roles:
+#    - { role: ../roles/rvm-common }
+#    - { role: ../roles/sufia-deps }
+    - { role: ../roles/buildbot-slave }
+
+
+

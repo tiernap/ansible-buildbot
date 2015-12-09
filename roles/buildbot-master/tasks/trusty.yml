@@ -1,0 +1,59 @@
+---
+# install necessary packages
+- name: install buildbot-master dependencies
+  apt: name={{ item }} state=present update_cache=yes cache_valid_time=5000
+  with_items:
+    - python-dev
+    - python-jinja2
+    - python-migrate
+    - python-twisted
+    - python-virtualenv
+    - python-pip
+    - supervisor
+    - git
+
+- name: install sqlalchemy version=0.7.10
+  pip: executable="pip" name=SQLAlchemy version=0.7.10 state=present
+
+- name: install buildbot
+  pip: executable="pip" name=buildbot state=present
+
+- name: initialize buildbot buildbot.tac
+  command: buildbot create-master masters chdir=/home/{{ansible_env.SUDO_USER}} creates=/home/{{ansible_env.SUDO_USER}}/masters/buildbot.tac
+
+- name: write buildbot master.cfg
+  template: src=master.cfg.j2 dest=/home/{{ansible_env.SUDO_USER}}/masters/master.cfg owner={{ansible_env.SUDO_USER}} group={{ansible_env.SUDO_USER}}
+  register: master_cfg_rc
+
+- name: write buildbot master.json
+  template: src=master.json.j2 dest=/home/{{ansible_env.SUDO_USER}}/masters/master.json owner={{ansible_env.SUDO_USER}} group={{ansible_env.SUDO_USER}}
+  register: master_json_rc
+
+- name: write buildbot SimpleConfig.py
+  template: src=SimpleConfig.py.j2 dest=/home/{{ansible_env.SUDO_USER}}/masters/SimpleConfig.py owner={{ansible_env.SUDO_USER}} group={{ansible_env.SUDO_USER}}
+  register: simpleconfig_py_rc
+
+- name: write myconfig.json
+  template: src=myconfig.json.j2 dest=/home/{{ansible_env.SUDO_USER}}/myconfig.json
+  register: myconfig_json_rc
+
+- name: set owner/group to files under /home/{{ansible_env.SUDO_USER}}
+  file: path=/home/{{ansible_env.SUDO_USER}} owner={{ansible_env.SUDO_USER}} group={{ansible_env.SUDO_USER}} recurse=yes
+
+- name: write /etc/supervisor/conf.d/buildbot.conf
+  template: src=buildbot.conf.j2 dest=/etc/supervisor/conf.d/buildbot.conf
+  register: buildbot_rc
+
+# service restart supervisor does not work, we need to stop and start it.
+- name: stop supervisor
+  service: name=supervisor state=stopped
+  when: master_cfg_rc|changed or master_json_rc|changed or simpleconfig_py_rc|changed or myconfig_json_rc|changed or buildbot_rc|changed
+
+# start supervisor will not work if we don't wait here.
+# 2 seconds is not enough
+- name: wait until supervisor is stopped
+  pause: seconds=3
+  when: master_cfg_rc|changed or master_json_rc|changed or simpleconfig_py_rc|changed or myconfig_json_rc|changed or buildbot_rc|changed
+
+- name: start and enable supervisor
+  service: name=supervisor state=started enabled=yes

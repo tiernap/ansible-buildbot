@@ -1,0 +1,21 @@
+---
+# XXX use dynamic urls here
+webuser: buildbot
+webpass: password
+slavepass: password
+buildmaster_port: 9010
+repo_prefix: 'git://example.com/project'
+# repositories and branches
+repositories: {
+        'repo1': ['master'],
+        'repo2': ['master'],
+        'repo3': ['master']
+        }
+
+bb_email: 'buildbot@example.com'
+bb_email_extra: 'devel@example.com'
+bb_irc_server: 'irc.example.com'
+bb_irc_channel: 'devel'
+bb_url: 'http://buildbot1.internal.tld'
+project_name: 'Project 1'
+project_url: 'http://github.com'

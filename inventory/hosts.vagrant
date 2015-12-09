@@ -1,0 +1,7 @@
+
+[buildbot-master]
+buildbot1.internal.tld
+
+[buildbot-slave]
+buildbot1.internal.tld
+buildbot2.internal.tld

@@ -1,0 +1,27 @@
+---
+
+java_version: 8
+webuser: buildbot
+webpass: password
+slavepass: password
+buildmaster_port: 9010
+bb_url: 'http://buildbot1.internal.tld/'
+project_name: 'Project 1'
+project_url: 'http://github.com/tiernap'
+
+
+
+# repositories and branches
+# list repos here for buildbot to watch
+repo_prefix: 'https://github.com/project1'
+repositories: {
+        'repo1.git': ['master']
+        'repo2.git': ['master'],
+        'repo3.git': ['master']
+        }
+
+# alert email addresses (Requires mail sender)
+bb_email: 'alert@example.com'
+bb_email_extra: 'devel@example.com'
+bb_irc_server: 'irc.example.com'
+bb_irc_channel: 'project1'

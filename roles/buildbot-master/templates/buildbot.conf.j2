@@ -1,0 +1,6 @@
+[program:buildbot]
+command=twistd --nodaemon --no_save -y buildbot.tac
+directory=/home/{{ansible_env.SUDO_USER}}/masters
+redirect_stderr=true
+user={{ansible_env.SUDO_USER}}
+environment=HOME="/home/{{ansible_env.SUDO_USER}}",USER="{{ansible_env.SUDO_USER}}"

@@ -1,0 +1,33 @@
+{
+  "slaves": [
+{% for host in groups['buildbot-slave'] %}
+{% if not loop.last %}
+      { "os": "{{hostvars[groups['buildbot-slave'][0]]['ansible_distribution_release']}}{{hostvars[groups['buildbot-slave'][0]]['ansible_userspace_bits']}}", "name": "{{host}}" },
+{% else %}
+      { "os": "{{hostvars[groups['buildbot-slave'][0]]['ansible_distribution_release']}}{{hostvars[groups['buildbot-slave'][0]]['ansible_userspace_bits']}}", "name": "{{host}}" }
+{% endif %}
+{% endfor %}
+    ],
+  "projects": [
+{% for repo, branches in repositories|dictsort %}
+    {
+      "name": "{{repo}}",
+      "repourl": "{{repo_prefix}}/{{repo}}",
+      "category": "active",
+      "builders": [
+{% for branch in branches %}
+{% if not loop.last %}
+          { "os": "{{hostvars[groups['buildbot-slave'][0]]['ansible_distribution_release']}}{{hostvars[groups['buildbot-slave'][0]]['ansible_userspace_bits']}}", "branch": "{{branch}}" },
+{% else %}
+          { "os": "{{hostvars[groups['buildbot-slave'][0]]['ansible_distribution_release']}}{{hostvars[groups['buildbot-slave'][0]]['ansible_userspace_bits']}}", "branch": "{{branch}}" }
+{% endif %}
+{% endfor %}
+        ]
+{% if not loop.last %}
+    },
+{% else %}
+    }
+{% endif %}
+{% endfor %}
+  ]
+}

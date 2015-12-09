@@ -1,0 +1,61 @@
+---
+# install packages
+- name: install buildbot-slave dependencies
+  apt: name={{ item }} state=present update_cache=yes cache_valid_time=5000
+  with_items:
+    - python-dev
+    - python-jinja2
+    - python-migrate
+    - python-twisted
+    - python-virtualenv
+    - python-pip
+    - libqtwebkit-dev
+    - firefox
+    - xvfb
+    - phantomjs
+    - supervisor
+    - git
+
+- name: add ansible ppa
+  apt_repository: repo="ppa:ansible/ansible" state=present update_cache=yes
+
+- name: install ansible
+  apt: name=ansible state=present
+
+- name: install sqlalchemy version=0.7.10
+  pip: executable="pip" name=sqlalchemy version=0.7.10 state=present
+
+- name: install buildbot-slave
+  pip: executable="pip" name=buildbot-slave state=present
+
+- name: remove slave buildbot.tac
+  file: path=/home/{{ansible_env.SUDO_USER}}/slaves/buildbot.tac state=absent
+
+# This will create the base directory and a collection of files inside,
+# including the buildbot.tac file that contains all the information you passed to the buildbot command.
+# buildslave create-slave BASEDIR MASTERHOST:PORT SLAVENAME PASSWORD
+- name: initialize slave buildbot.tac
+  command: buildslave create-slave slaves {{groups['buildbot-master'][0]}}:{{buildmaster_port}} {{ansible_fqdn}} {{slavepass}} chdir=/home/{{ansible_env.SUDO_USER}}
+
+- name: set owner/group to files under /home/{{ansible_env.SUDO_USER}}
+  file: path=/home/{{ansible_env.SUDO_USER}} owner={{ansible_env.SUDO_USER}} group={{ansible_env.SUDO_USER}} recurse=yes
+
+- name: write supervisor configuration for buildbot
+  template: src=buildbot-slave.conf.j2 dest=/etc/supervisor/conf.d/buildbot-slave.conf
+  register: buildbot_rc
+
+# Here the service is only restarted when the configuration file changes,
+
+# service restart supervisor does not work, we need to stop and start it.
+- name: stop supervisor
+  service: name=supervisor state=stopped
+  when: buildbot_rc|changed
+
+# start supervisor will not work if we don't wait here.
+# 2 seconds is not enough
+- name: wait until supervisor is stopped
+  pause: seconds=3
+  when: buildbot_rc|changed
+
+- name: start and enable supervisor
+  service: name=supervisor state=started enabled=yes

@@ -1,0 +1,6 @@
+---
+webuser: buildbot
+webpass: password
+slavepass: password
+buildmaster_port: 9010
+java_version: 8
